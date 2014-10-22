@@ -3,11 +3,16 @@ from functools import wraps
 from werkzeug import secure_filename
 from flask import request, Blueprint, render_template, jsonify, flash, \
     redirect, url_for
-from my_app import db, app, ALLOWED_EXTENSIONS
+from my_app import db, app, ALLOWED_EXTENSIONS, babel, ALLOWED_LANGUAGES
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
 
 catalog = Blueprint('catalog', __name__)
+
+
+@babel.localeselector
+def get_locale():
+    return request.accept_languages.best_match(ALLOWED_LANGUAGES.keys())
 
 
 def template_or_json(template=None):

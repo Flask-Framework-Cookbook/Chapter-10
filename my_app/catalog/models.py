@@ -3,7 +3,9 @@ from wtforms import TextField, DecimalField, SelectField, FileField
 from wtforms.validators import InputRequired, NumberRange, ValidationError
 from wtforms.widgets import html_params, Select, HTMLString
 from flask_wtf import Form
+from flask.ext.babel import lazy_gettext as _
 from my_app import db
+
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,7 +39,7 @@ class Category(db.Model):
 
 
 class NameForm(Form):
-    name = TextField('Name', validators=[InputRequired()])
+    name = TextField(_('Name'), validators=[InputRequired()])
 
 
 class CustomCategoryInput(Select):
@@ -73,13 +75,13 @@ class CategoryField(SelectField):
 
 
 class ProductForm(NameForm):
-    price = DecimalField('Price', validators=[
+    price = DecimalField(_('Price'), validators=[
         InputRequired(), NumberRange(min=Decimal('0.0'))
     ])
     category = CategoryField(
-        'Category', validators=[InputRequired()], coerce=int
+        _('Category'), validators=[InputRequired()], coerce=int
     )
-    image = FileField('Product Image')
+    image = FileField(_('Product Image'))
 
 
 def check_duplicate_category(case_sensitive=True):
@@ -100,6 +102,6 @@ def check_duplicate_category(case_sensitive=True):
 
 
 class CategoryForm(NameForm):
-    name = TextField('Name', validators=[
+    name = TextField(_('Name'), validators=[
         InputRequired(), check_duplicate_category()
     ])

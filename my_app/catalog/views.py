@@ -2,8 +2,8 @@ import os
 from functools import wraps
 from werkzeug import secure_filename
 from flask import request, Blueprint, render_template, jsonify, flash, \
-    redirect, url_for
-from my_app import db, app, ALLOWED_EXTENSIONS, babel, ALLOWED_LANGUAGES
+    redirect, url_for as flask_url_for, g
+from my_app import db, app, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
 from flask.ext.babel import lazy_gettext as _
@@ -11,9 +11,28 @@ from flask.ext.babel import lazy_gettext as _
 catalog = Blueprint('catalog', __name__)
 
 
+@app.before_request
+def before():
+    if request.view_args and 'lang' in request.view_args:
+        g.current_lang = request.view_args['lang']
+        request.view_args.pop('lang')
+
+
+@app.context_processor
+def inject_url_for():
+    return {
+        'url_for': lambda endpoint, **kwargs: flask_url_for(
+            endpoint, lang=g.get('current_lang', 'en'), **kwargs
+        )
+    }
+
+
+url_for = inject_url_for()['url_for']
+
+
 @babel.localeselector
 def get_locale():
-    return request.accept_languages.best_match(ALLOWED_LANGUAGES.keys())
+    return g.get('current_lang', 'en')
 
 
 def template_or_json(template=None):
@@ -45,27 +64,28 @@ def page_not_found(e):
 
 
 @catalog.route('/')
-@catalog.route('/home')
+@catalog.route('/<lang>/')
+@catalog.route('/<lang>/home')
 @template_or_json('home.html')
 def home():
     products = Product.query.all()
     return {'count': len(products)}
 
 
-@catalog.route('/product/<id>')
+@catalog.route('/<lang>/product/<id>')
 def product(id):
     product = Product.query.get_or_404(id)
     return render_template('product.html', product=product)
 
 
-@catalog.route('/products')
-@catalog.route('/products/<int:page>')
+@catalog.route('/<lang>/products')
+@catalog.route('/<lang>/products/<int:page>')
 def products(page=1):
     products = Product.query.paginate(page, 10)
     return render_template('products.html', products=products)
 
 
-@catalog.route('/product-create', methods=['GET', 'POST'])
+@catalog.route('/<lang>/product-create', methods=['GET', 'POST'])
 def create_product():
     form = ProductForm(request.form)
 
@@ -92,8 +112,8 @@ def create_product():
     return render_template('product-create.html', form=form)
 
 
-@catalog.route('/product-search')
-@catalog.route('/product-search/<int:page>')
+@catalog.route('/<lang>/product-search')
+@catalog.route('/<lang>/product-search/<int:page>')
 def product_search(page=1):
     name = request.args.get('name')
     price = request.args.get('price')
@@ -115,7 +135,7 @@ def product_search(page=1):
     )
 
 
-@catalog.route('/category-create', methods=['GET', 'POST'])
+@catalog.route('/<lang>/category-create', methods=['GET', 'POST'])
 def create_category():
     form = CategoryForm(request.form)
 
@@ -137,13 +157,13 @@ def create_category():
     return render_template('category-create.html', form=form)
 
 
-@catalog.route('/category/<id>')
+@catalog.route('/<lang>/category/<id>')
 def category(id):
     category = Category.query.get_or_404(id)
     return render_template('category.html', category=category)
 
 
-@catalog.route('/categories')
+@catalog.route('/<lang>/categories')
 def categories():
     categories = Category.query.all()
     return render_template('categories.html', categories=categories)

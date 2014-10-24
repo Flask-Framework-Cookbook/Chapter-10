@@ -2,7 +2,7 @@ import os
 from functools import wraps
 from werkzeug import secure_filename
 from flask import request, Blueprint, render_template, jsonify, flash, \
-    redirect, url_for as flask_url_for, g
+    redirect, url_for as flask_url_for, g, abort
 from my_app import db, app, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
@@ -69,12 +69,18 @@ def page_not_found(e):
 @template_or_json('home.html')
 def home():
     products = Product.query.all()
+    app.logger.info(
+        'Home page with total of %d products' % len(products)
+    )
     return {'count': len(products)}
 
 
 @catalog.route('/<lang>/product/<id>')
 def product(id):
-    product = Product.query.get_or_404(id)
+    product = Product.query.filter_by(id=id).first()
+    if not product:
+        app.logger.warning('Requested product not found.')
+        abort(404)
     return render_template('product.html', product=product)
 
 

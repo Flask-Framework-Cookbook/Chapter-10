@@ -17,6 +17,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 app.config['WTF_CSRF_SECRET_KEY'] = 'random key for form'
 db = SQLAlchemy(app)
 
+app.config['LOG_FILE'] = 'application.log'
+
+if not app.debug:
+    import logging
+    from logging import FileHandler, Formatter
+    file_handler = FileHandler(app.config['LOG_FILE'])
+    app.logger.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    file_handler.setFormatter(Formatter(
+        '%(asctime)s %(levelname)s: %(message)s '
+        '[in %(pathname)s:%(lineno)d]'
+    ))
+
 
 babel = Babel(app)
 
@@ -25,4 +38,5 @@ app.secret_key = 'some_random_key'
 from my_app.catalog.views import catalog
 app.register_blueprint(catalog)
 
-db.create_all()
+with app.app_context():
+    db.create_all()

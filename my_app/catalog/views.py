@@ -1,8 +1,8 @@
 import os
 from functools import wraps
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from flask import request, Blueprint, render_template, jsonify, flash, \
-    redirect, url_for as flask_url_for, g
+    redirect, url_for as flask_url_for, g, abort
 from my_app import db, app, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
@@ -45,7 +45,7 @@ def template_or_json(template=None):
         @wraps(f)
         def decorated_fn(*args, **kwargs):
             ctx = f(*args, **kwargs)
-            if request.is_xhr or not template:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or not template:
                 return jsonify(ctx)
             else:
                 return render_template(template, **ctx)
@@ -69,19 +69,25 @@ def page_not_found(e):
 @template_or_json('home.html')
 def home():
     products = Product.query.all()
+    app.logger.info(
+        'Home page with total of %d products' % len(products)
+    )
     return {'count': len(products)}
 
 
 @catalog.route('/<lang>/product/<id>')
 def product(id):
-    product = Product.query.get_or_404(id)
+    product = Product.query.filter_by(id=id).first()
+    if not product:
+        app.logger.warning('Requested product not found.')
+        abort(404)
     return render_template('product.html', product=product)
 
 
 @catalog.route('/<lang>/products')
 @catalog.route('/<lang>/products/<int:page>')
 def products(page=1):
-    products = Product.query.paginate(page, 10)
+    products = Product.query.paginate(page=page, per_page=10)
     return render_template('products.html', products=products)
 
 
@@ -130,7 +136,7 @@ def product_search(page=1):
             Category.name.like('%' + category + '%')
         )
     return render_template(
-        'products.html', products=products.paginate(page, 10)
+        'products.html', products=products.paginate(page=page, per_page=10)
     )
 
 

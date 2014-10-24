@@ -1,9 +1,10 @@
 from decimal import Decimal
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import TextField, DecimalField, SelectField
+from wtforms import StringField, DecimalField, SelectField
 from wtforms.validators import InputRequired, NumberRange, ValidationError
-from wtforms.widgets import html_params, Select, HTMLString
+from wtforms.widgets import html_params, Select
+from markupsafe import Markup
 from flask_wtf import Form
 from flask_babel import lazy_gettext as _
 from my_app import db
@@ -41,7 +42,7 @@ class Category(db.Model):
 
 
 class NameForm(FlaskForm):
-    name = TextField(_('Name'), validators=[InputRequired()])
+    name = StringField(_('Name'), validators=[InputRequired()])
 
 
 class CustomCategoryInput(Select):
@@ -57,7 +58,7 @@ class CustomCategoryInput(Select):
                     ), label
                 )
             )
-        return HTMLString(' '.join(html))
+        return Markup(' '.join(html))
 
 
 class CategoryField(SelectField):
@@ -104,6 +105,6 @@ def check_duplicate_category(case_sensitive=True):
 
 
 class CategoryForm(NameForm):
-    name = TextField(_('Name'), validators=[
+    name = StringField(_('Name'), validators=[
         InputRequired(), check_duplicate_category()
     ])

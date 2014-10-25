@@ -16,12 +16,14 @@ class Product(db.Model):
         'Category', backref=db.backref('products', lazy='dynamic')
     )
     image_path = db.Column(db.String(255))
+    user_timezone = db.Column(db.String(255))
 
-    def __init__(self, name, price, category, image_path):
+    def __init__(self, name, price, category, image_path, user_timezone=''):
         self.name = name
         self.price = price
         self.category = category
         self.image_path = image_path
+        self.user_timezone = user_timezone
 
     def __repr__(self):
         return '<Product %d>' % self.id

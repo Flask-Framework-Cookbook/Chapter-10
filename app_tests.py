@@ -2,6 +2,8 @@ import os
 from my_app import app, db
 import unittest2 as unittest
 import tempfile
+from geoip import IPInfo
+from mock import patch
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -12,9 +14,17 @@ class CatalogTestCase(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         self.app = app.test_client()
+        self.lookup_patcher = patch('geoip.geolite2.lookup', autospec=True)
+        PatchedLookup = self.lookup_patcher.start()
+        PatchedLookup.return_value = IPInfo('17.0.0.1', {
+            'location': {
+                'time_zone': 'America/Los_Angeles'
+            }
+        })
         db.create_all()
 
     def tearDown(self):
+        self.lookup_patcher.stop()
         os.remove(self.test_db_file)
 
     def test_home(self):
@@ -77,9 +87,10 @@ class CatalogTestCase(unittest.TestCase):
         })
         self.assertEqual(rv.status_code, 302)
 
-        rv = self.app.get('/en/products')
+        rv = self.app.get('/en/product/1')
         self.assertEqual(rv.status_code, 200)
         self.assertTrue('iPhone 5' in rv.data)
+        self.assertTrue('America/Los_Angeles' in rv.data)
 
     def test_search_product(self):
         "Test searching product"

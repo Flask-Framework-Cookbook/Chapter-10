@@ -4,6 +4,15 @@ import unittest2 as unittest
 import tempfile
 from geoip import IPInfo
 from mock import patch
+import coverage
+
+cov = coverage.coverage(
+    omit = [
+        '/Users/shalabhaggarwal/workspace/mydev/lib/python2.7/site-packages/*',
+        'app_tests.py'
+    ]
+)
+cov.start()
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -131,4 +140,11 @@ class CatalogTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    try:
+        unittest.main()
+    finally:
+        cov.stop()
+        cov.save()
+        cov.report()
+        cov.html_report(directory = 'coverage')
+        cov.erase()

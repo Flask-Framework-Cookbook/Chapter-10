@@ -6,6 +6,7 @@ from flask import request, Blueprint, render_template, jsonify, flash, \
 from my_app import db, app, ALLOWED_EXTENSIONS, babel, ALLOWED_LANGUAGES
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
+from flask_babel import lazy_gettext as _
 
 catalog = Blueprint('catalog', __name__)
 
@@ -81,7 +82,7 @@ def create_product():
         product = Product(name, price, category, filename)
         db.session.add(product)
         db.session.commit()
-        flash('The product %s has been created' % name, 'success')
+        flash(_('The product %(name)s has been created', name=name), 'success')
         return redirect(url_for('catalog.product', id=product.id))
 
     if form.errors:
@@ -123,7 +124,7 @@ def create_category():
         db.session.add(category)
         db.session.commit()
         flash(
-            'The category %s has been created' % name, 'success'
+            _('The category %(name)s has been created', name=name), 'success'
         )
         return redirect(
             url_for('catalog.category', id=category.id)

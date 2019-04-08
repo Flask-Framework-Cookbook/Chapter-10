@@ -12,17 +12,18 @@
     {% endfor %}
     {% if products.has_prev %}
       <a href="{{ url_for('catalog.products', page=products.prev_num) }}">
-        {{"<< Previous Page"}}
+        {{_("<< Previous Page")}}
       </a>
     {% else %}
-      {{"<< Previous Page"}}
-    {% endif %} |
+      {{_("No Previous Page")}}
+    {% endif %} 
+    {{ ngettext('%(num)d page', '%(num)d pages', products.pages) }} |
     {% if products.has_next %}
       <a href="{{ url_for('catalog.products', page=products.next_num) }}">
-        {{"Next page >>"}}
+        {{_("Next page >>")}}
       </a>
     {% else %}
-      {{"Next page >>"}}
+      {{_("No Next page")}}
     {% endif %}
   </div>
 {% endblock %}

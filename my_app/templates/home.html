@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block container %}
-  <h1>Welcome to the Catalog Home</h1>
+<h1>{{ _('Welcome to the Catalog Home') }}</h1>
   <a href="{{ url_for('catalog.products') }}" id="catalog_link">
-    Click here to see the catalog
+  {{ _('Click here to see the catalog ') }}
   </a>
 {% endblock %}
 

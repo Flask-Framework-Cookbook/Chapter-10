@@ -21,9 +21,9 @@ app.config['LOG_FILE'] = 'application.log'
 
 if not app.debug:
     import logging
+    logging.basicConfig(level=logging.INFO)
     from logging import FileHandler, Formatter
     file_handler = FileHandler(app.config['LOG_FILE'])
-    file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
     file_handler.setFormatter(Formatter(
         '%(asctime)s %(levelname)s: %(message)s '

@@ -2,6 +2,8 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_babel import Babel
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
@@ -12,6 +14,11 @@ ALLOWED_LANGUAGES = {
 }
 
 RECEPIENTS = ['some_receiver@gmail.com']
+
+sentry_sdk.init(
+    dsn="Some URL provided by Sentry project",
+    integrations=[FlaskIntegration()]
+)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.realpath('.') + '/my_app/static/uploads'
@@ -34,7 +41,7 @@ if not app.debug:
         'Error occurred in your application',
         ('some_email@gmail.com', 'some_gmail_password'), secure=())
     mail_handler.setLevel(logging.ERROR)
-    app.logger.addHandler(mail_handler)
+    # app.logger.addHandler(mail_handler)
     for handler in [file_handler, mail_handler]:
         handler.setFormatter(Formatter(
             '%(asctime)s %(levelname)s: %(message)s '

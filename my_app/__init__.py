@@ -16,7 +16,7 @@ ALLOWED_LANGUAGES = {
 RECEPIENTS = ['some_receiver@gmail.com']
 
 sentry_sdk.init(
-    dsn="Some URL provided by Sentry project",
+    dsn="https://1234:5678@fake-sentry-server/1",
     integrations=[FlaskIntegration()]
 )
 

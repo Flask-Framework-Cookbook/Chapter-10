@@ -102,14 +102,18 @@ def create_product():
         category = Category.query.get_or_404(
             form.category.data
         )
-        image = form.image.data
-        if allowed_file(image.filename):
+        image = request.files and request.files['image']
+        filename = ''
+        if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         product = Product(name, price, category, filename)
         db.session.add(product)
         db.session.commit()
-        flash(_('The product %(name)s has been created', name=name), 'success')
+        flash(
+            _('The product %(name)s has been created', name=name),
+            'success'
+        )
         return redirect(url_for('catalog.product', id=product.id))
 
     if form.errors:
@@ -151,7 +155,8 @@ def create_category():
         db.session.add(category)
         db.session.commit()
         flash(
-            _('The category %(name)s has been created', name=name), 'success'
+            _('The category %(name)s has been created', name=name),
+            'success'
         )
         return redirect(
             url_for('catalog.category', id=category.id)

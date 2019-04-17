@@ -20,10 +20,10 @@
     {{ ngettext('%(num)d page', '%(num)d pages', products.pages) }} |
     {% if products.has_next %}
       <a href="{{ url_for('catalog.products', page=products.next_num) }}">
-        {{_("Next page >>")}}
+        {{_("Next Page >>")}}
       </a>
     {% else %}
-      {{_("No Next page")}}
+      {{_("No Next Page")}}
     {% endif %}
   </div>
 {% endblock %}

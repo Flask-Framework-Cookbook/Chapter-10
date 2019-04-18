@@ -1,7 +1,9 @@
 import os
 from my_app import create_app, db, babel
 import unittest
+from unittest import mock
 import tempfile
+import geoip2.records
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -9,6 +11,7 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         test_config = {}
         self.test_db_file = tempfile.mkstemp()[1]
+
         test_config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + self.test_db_file
         test_config['TESTING'] = True
         test_config['WTF_CSRF_ENABLED'] = False
@@ -16,6 +19,14 @@ class CatalogTestCase(unittest.TestCase):
         self.app = create_app(test_config)
         db.init_app(self.app)
         babel.init_app(self.app)
+
+        self.geoip_city_patcher = mock.patch('geoip2.models.City',
+            location=geoip2.records.Location(time_zone = 'America/Los_Angeles')
+        )
+        PatchedGeoipCity = self.geoip_city_patcher.start()
+        self.geoip_reader_patcher = mock.patch('geoip2.database.Reader')
+        PatchedGeoipReader = self.geoip_reader_patcher.start()
+        PatchedGeoipReader().city.return_value = PatchedGeoipCity
 
         with self.app.app_context():
             db.create_all()
@@ -26,6 +37,8 @@ class CatalogTestCase(unittest.TestCase):
         self.client = self.app.test_client()
 
     def tearDown(self):
+        self.geoip_city_patcher.stop()
+        self.geoip_reader_patcher.stop()
         os.remove(self.test_db_file)
 
     def test_home(self):
@@ -88,9 +101,10 @@ class CatalogTestCase(unittest.TestCase):
         })
         self.assertEqual(rv.status_code, 302)
 
-        rv = self.client.get('/en/products')
+        rv = self.client.get('/en/product/1')
         self.assertEqual(rv.status_code, 200)
         self.assertTrue('iPhone 5' in rv.data.decode("utf-8"))
+        self.assertTrue('America/Los_Angeles' in rv.data.decode("utf-8"))
 
     def test_search_product(self):
         "Test searching product"

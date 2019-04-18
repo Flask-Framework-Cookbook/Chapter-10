@@ -7,6 +7,7 @@ from my_app import db, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
 from flask_babel import lazy_gettext as _
+import geoip2.database, geoip2.errors
 
 catalog = Blueprint('catalog', __name__)
 
@@ -106,7 +107,17 @@ def create_product():
         filename = secure_filename(image.filename)
         if allowed_file(filename):
             image.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-        product = Product(name, price, category, filename)
+        reader = geoip2.database.Reader(
+            'GeoLite2-City_20230113/GeoLite2-City.mmdb'
+        )
+        try:
+            match = reader.city(request.remote_addr)
+        except geoip2.errors.AddressNotFoundError:
+            match = None
+        product = Product(
+            name, price, category, filename,
+            match and match.location.time_zone or 'Localhost'
+        )
         db.session.add(product)
         db.session.commit()
         flash(_('The product %(name)s has been created', name=name), 'success')

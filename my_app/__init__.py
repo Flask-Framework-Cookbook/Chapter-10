@@ -67,8 +67,9 @@ def create_db(app):
 
 
 app = create_app()
-db = create_db(app)
 babel = Babel(app)
 
 from my_app.catalog.views import catalog
 app.register_blueprint(catalog)
+
+db = create_db(app)

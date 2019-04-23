@@ -8,6 +8,7 @@ from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
 from flask_babel import lazy_gettext as _
 import geoip2.database
+from geoip2.errors import AddressNotFoundError
 
 catalog = Blueprint('catalog', __name__)
 
@@ -109,7 +110,10 @@ def create_product():
             filename = secure_filename(image.filename)
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         reader = geoip2.database.Reader('GeoLite2-City_20190416/GeoLite2-City.mmdb')
-        match = reader.city(request.remote_addr)
+        try:
+            match = reader.city(request.remote_addr)
+        except AddressNotFoundError:
+            match = None
         product = Product(
             name, price, category, filename,
             match and match.location.time_zone or 'Localhost'

@@ -2,8 +2,8 @@ import os
 from functools import wraps
 from werkzeug.utils import secure_filename
 from flask import request, Blueprint, render_template, jsonify, flash, \
-    redirect, url_for as flask_url_for, g, abort
-from my_app import db, app, ALLOWED_EXTENSIONS, babel
+    redirect, url_for as flask_url_for, g, abort, current_app
+from my_app import db, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
 from sqlalchemy.orm.util import join
 from flask_babel import lazy_gettext as _
@@ -11,14 +11,14 @@ from flask_babel import lazy_gettext as _
 catalog = Blueprint('catalog', __name__)
 
 
-@app.before_request
+@catalog.before_request
 def before():
     if request.view_args and 'lang' in request.view_args:
         g.current_lang = request.view_args['lang']
         request.view_args.pop('lang')
 
 
-@app.context_processor
+@catalog.context_processor
 def inject_url_for():
     return {
         'url_for': lambda endpoint, **kwargs: flask_url_for(
@@ -58,9 +58,9 @@ def allowed_file(filename):
             filename.lower().rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-@app.errorhandler(404)
+@catalog.errorhandler(404)
 def page_not_found(e):
-    app.logger.error(e)
+    current_app.logger.error(e)
     return render_template('404.html'), 404
 
 
@@ -70,7 +70,7 @@ def page_not_found(e):
 @template_or_json('home.html')
 def home():
     products = Product.query.all()
-    app.logger.info(
+    current_app.logger.info(
         'Home page with total of %d products' % len(products)
     )
     return {'count': len(products)}
@@ -80,7 +80,7 @@ def home():
 def product(id):
     product = Product.query.filter_by(id=id).first()
     if not product:
-        app.logger.warning('Requested product not found.')
+        current_app.logger.warning('Requested product not found.')
         abort(404)
     return render_template('product.html', product=product)
 
@@ -105,7 +105,7 @@ def create_product():
         image = form.image.data
         if allowed_file(image.filename):
             filename = secure_filename(image.filename)
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         product = Product(name, price, category, filename)
         db.session.add(product)
         db.session.commit()

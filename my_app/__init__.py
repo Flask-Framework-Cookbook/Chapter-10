@@ -23,7 +23,10 @@ sentry_sdk.init(
 db = SQLAlchemy()
 
 def create_app(alt_config={}):
-    app = Flask(__name__, template_folder=alt_config.get('TEMPLATE_FOLDER', 'templates'))
+    app = Flask(
+        __name__,
+        template_folder=alt_config.get('TEMPLATE_FOLDER', 'templates')
+    )
 
     app.config['UPLOAD_FOLDER'] = os.path.realpath('.') + '/my_app/static/uploads'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'

@@ -103,8 +103,8 @@ def create_product():
             form.category.data
         )
         image = form.image.data
-        if allowed_file(image.filename):
-            filename = secure_filename(image.filename)
+        filename = secure_filename(image.filename)
+        if allowed_file(filename):
             image.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         product = Product(name, price, category, filename)
         db.session.add(product)

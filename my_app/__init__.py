@@ -66,8 +66,13 @@ def create_db(app):
     return db
 
 
+def get_locale():
+    return g.get('current_lang', 'en')
+
+
 app = create_app()
 babel = Babel(app)
+babel.init_app(app, locale_selector=get_locale)
 
 from my_app.catalog.views import catalog
 app.register_blueprint(catalog)

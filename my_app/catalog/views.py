@@ -5,7 +5,7 @@ from flask import request, Blueprint, render_template, jsonify, flash, \
     redirect, url_for as flask_url_for, g, abort, current_app
 from my_app import db, ALLOWED_EXTENSIONS, babel
 from my_app.catalog.models import Product, Category, ProductForm, CategoryForm
-from sqlalchemy.orm.util import join
+from sqlalchemy.orm import join
 from flask_babel import lazy_gettext as _
 import geoip2.database, geoip2.errors
 
@@ -29,11 +29,6 @@ def inject_url_for():
 
 
 url_for = inject_url_for()['url_for']
-
-
-@babel.localeselector
-def get_locale():
-    return g.get('current_lang', 'en')
 
 
 def template_or_json(template=None):
